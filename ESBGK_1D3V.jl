@@ -51,7 +51,7 @@ function simulate!(particles, species, time_step, end_time, mesh, boundaries; co
         transformation_matrix = with(∑v², ∑v⁰, velocity, temperature) do ∑v²ᵢ, ∑v⁰ᵢ, uᵢ, Tᵢ
             Σ = (∑v²ᵢ - ∑v⁰ᵢ * uᵢ * uᵢ') / (∑v⁰ᵢ - 1)
             ν = 1 - 1 / species.prandtl_number
-            𝓐 = ((1 - ν) * tr(Σ) / 3 * I + ν * Σ) * species.mass / (Kᴮ * Tᵢ)
+            𝓐 = ((1 - ν) * tr(Σ) / 3 * I + ν * Σ)
             return cholesky(Symmetric(𝓐)).L
         end
 
@@ -71,7 +71,7 @@ function simulate!(particles, species, time_step, end_time, mesh, boundaries; co
         #----------------------------------------------------------------------------------
         # Relaxation part
         for particle in particles
-            relax!(particle, species, velocity, temperature, relaxation_probability, transformation_matrix)
+            relax!(particle, velocity, relaxation_probability, transformation_matrix)
         end
 
         #----------------------------------------------------------------------------------
@@ -126,17 +126,15 @@ function sample_moments(particles, function_space)
     return ∑v⁰, ∑v¹, ∑v²
 end
 
-function relax!(particle, species, velocity, temperature, relaxation_probability, transformation_matrix)
+function relax!(particle, velocity, relaxation_probability, transformation_matrix)
     x = particle.position
 
     rand() > relaxation_probability(x) && return nothing
 
     u = velocity(x)
-    T = temperature(x)
     𝓢 = transformation_matrix(x)
 
-    C = sample_velocity.(u, T, species.mass)
-    particle.velocity = 𝓢 * C
+    particle.velocity = u + 𝓢 * randn(SVector{3, Float64})
 end
 
 most_probable_velocity(T, mₛ) = √(2 * Kᴮ * T / mₛ)

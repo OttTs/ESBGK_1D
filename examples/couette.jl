@@ -27,8 +27,8 @@ mesh = ESBGK_1D3V.Mesh(10, (-0.5, 0.5))
 Δt = 1E-5
 
 # Linear or Constant solution
-function_space = ESBGK_1D3V.Lagrange(mesh)                      # Linear
-#function_space = ESBGK_1D3V.DiscontinuousLagrangeLagrange(mesh) # Constant
+function_space = ESBGK_1D3V.Lagrange(mesh)              # Linear
+#function_space = ESBGK_1D3V.DiscontinuousLagrange(mesh) # Constant
 
 ## ----------------------------------------------------------------------------------------
 # Sample initial data and simulate for 0.25s
@@ -52,7 +52,7 @@ end
 
 x = -0.499:0.01:0.499
 y = Observable(temperature.(x))
-lines!(ax, x, y)
+#lines!(ax, x, y)
 fig,ax = lines(x, y) # Only use this for the first plot!
 
 ## ----------------------------------------------------------------------------------------
@@ -60,6 +60,7 @@ fig,ax = lines(x, y) # Only use this for the first plot!
 # Use to see if the solution is "converged" or to average the result
 tend = 1
 i = 0
+t=0
 while t < tend
     i += 1
     t += Δt
