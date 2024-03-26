@@ -48,10 +48,10 @@ function simulate!(particles, species, time_step, end_time, mesh, boundaries; co
             return 1 - exp(-time_step / τ)
         end
 
-        transformation_matrix = with(∑v², ∑v⁰, velocity, temperature) do ∑v²ᵢ, ∑v⁰ᵢ, uᵢ, Tᵢ
+        transformation_matrix = with(∑v², ∑v⁰, velocity) do ∑v²ᵢ, ∑v⁰ᵢ, uᵢ
             Σ = (∑v²ᵢ - ∑v⁰ᵢ * uᵢ * uᵢ') / (∑v⁰ᵢ - 1)
             ν = 1 - 1 / species.prandtl_number
-            𝓐 = ((1 - ν) * tr(Σ) / 3 * I + ν * Σ)
+            𝓐 = (1 - ν) * tr(Σ) / 3 * I + ν * Σ
             return cholesky(Symmetric(𝓐)).L
         end
 
@@ -115,12 +115,19 @@ function sample_moments(particles, function_space)
 
     # Boundary handling...
     if typeof(∑v⁰._space) == Lagrange
-        ∑v⁰._values[1] *= 2
-        ∑v¹._values[1] *= 2
-        ∑v²._values[1] *= 2
-        ∑v⁰._values[end] *= 2
-        ∑v¹._values[end] *= 2
-        ∑v²._values[end] *= 2
+        #∑v⁰._values[1] *= 2
+        #∑v¹._values[1] *= 2
+        #∑v²._values[1] *= 2
+        #∑v⁰._values[end] *= 2
+        #∑v¹._values[end] *= 2
+        #∑v²._values[end] *= 2
+        ∑v⁰._values[1] = 2 * ∑v⁰._values[2] - ∑v⁰._values[3]
+        ∑v¹._values[1] = 2 * ∑v¹._values[2] - ∑v¹._values[3]
+        ∑v²._values[1] = 2 * ∑v²._values[2] - ∑v²._values[3]
+
+        ∑v⁰._values[end] = 2 * ∑v⁰._values[end-1] - ∑v⁰._values[end-2]
+        ∑v¹._values[end] = 2 * ∑v¹._values[end-1] - ∑v¹._values[end-2]
+        ∑v²._values[end] = 2 * ∑v²._values[end-1] - ∑v²._values[end-2]
     end
 
     return ∑v⁰, ∑v¹, ∑v²

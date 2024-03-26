@@ -40,11 +40,6 @@ end
 function with(f, u::DiscretizedFunction{T}, args::DiscretizedFunction...) where T
     result = DiscretizedFunction(T, u._space)
     for i in eachindex(u._values)
-        #println("---")
-        #@time u._values[i]
-        #@time args[1]#._space
-        #@time (v._values[i] for v in args)
-        #println("+++")
         result._values[i] = f(u._values[i], (v._values[i] for v in args)...)
     end
     return result
@@ -84,13 +79,8 @@ end
 Projects and adds a delta distribution, defined by its position x and its weight, onto a discretized function
 """
 function project_add!(u::DiscretizedFunction, x, weighting)
-    Δx = element_size(u._space._mesh) # TODO this should be ∫ φᵢ(x) dx
+    # Δx = element_size(u._space._mesh) # TODO this should be ∫ φᵢ(x) dx
     for (i, φᵢ) in u._space(x)
-        if(i==0)
-            println(x)
-            println(i)
-            println(φᵢ)
-        end
-        u._values[i] += φᵢ * weighting / Δx
+        u._values[i] += φᵢ * weighting# / Δx
     end
 end
