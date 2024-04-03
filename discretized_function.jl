@@ -26,6 +26,8 @@ Calculates the value of f at the position x
 """
 (f::DiscretizedFunction)(x) = sum(f._values[i] * φᵢ for (i,φᵢ) in f._space(x))
 
+(f::DiscretizedFunction)(x,y) = sum(f._values[i] * φᵢ for (i,φᵢ) in f._space(x,y))
+
 """
     with(f, u::DiscretizedFunction, args::DiscretizedFunction...)
 
@@ -80,7 +82,36 @@ Projects and adds a delta distribution, defined by its position x and its weight
 """
 function project_add!(u::DiscretizedFunction, x, weighting)
     # Δx = element_size(u._space._mesh) # TODO this should be ∫ φᵢ(x) dx
-    for (i, φᵢ) in u._space(x)
-        u._values[i] += φᵢ * weighting# / Δx
+    for (i, φᵢ) in u._space(x, 0)
+        #
+        u._values[i] += φᵢ * weighting / integ(u._space, i)# / Δx
+    end
+end
+
+function reconstruct!(u::DiscretizedFunction{T, DiscontinuousLagrange{2}}) where T
+
+    μ = (u._values[1:2:end] + u._values[2:2:end]) / 2
+    s = μ[2:end] - μ[1:end-1]
+
+    for i in 1:num_elements(u._space._mesh)
+        if i == 1
+            m = s[i]
+        elseif i == num_elements(u._space._mesh)
+            m = s[end]
+        else
+            m = minmod.(s[i-1], s[i])
+        end
+
+        u._values[2 * i - 1] = μ[i] - m / 2
+        u._values[2 * i] = μ[i] + m / 2
+    end
+end
+
+function minmod(a, b)
+    a*b < 0 && return zero(a)
+    if abs(a) < abs(b)
+        return a
+    else
+        return b
     end
 end
